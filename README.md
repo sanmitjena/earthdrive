@@ -4,12 +4,13 @@ An open-world 3D driving simulator inspired by `hostevilnews.com/play` (EarthDri
 
 ---
 
-## 🎮 Play Immediately
+## 🎮 Play Live
 
-The game server is currently live at:
-👉 **[http://localhost:8080](http://localhost:8080)**
+👉 **Live Web App (GitHub Pages):** **[https://sanmitjena.github.io/earthdrive/](https://sanmitjena.github.io/earthdrive/)**
 
-Or open [`index.html`](file:///C:/Users/LENOVO/.gemini/antigravity/scratch/earthdrive/index.html) in any modern web browser.
+Or locally:
+- Local Server: **[http://localhost:8080](http://localhost:8080)**
+- Or open [`index.html`](file:///C:/Users/LENOVO/.gemini/antigravity/scratch/earthdrive/index.html) in your browser.
 
 ---
 
