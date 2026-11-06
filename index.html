@@ -1,183 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>EarthDrive — Real Roads & 3D World Explorer</title>
-  <meta name="description" content="Explore and drive real-world roads anywhere on Earth in an immersive 3D open-world driving simulator." />
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <!-- 3D WebGL Canvas Viewport -->
-  <div id="canvas-container"></div>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>EarthDrive 3D — Real Roads & World Explorer</title><meta name="description" content="Drive real roads anywhere on Earth in an immersive 3D road explorer."><link rel="stylesheet" href="game-style-aa7942a386e0.css"><style id="startup-layout">[hidden]{display:none!important}body{margin:0;background:#bfd5e0;font-family:system-ui,sans-serif}#world{position:fixed;inset:0}#mode-choice{background:#f6f7ed;color:#1c3431;border:0;border-radius:22px;padding:28px;width:min(480px,90vw);box-sizing:border-box}#mode-choice::backdrop{background:#30483c66}#mode-choice h2{font:700 28px system-ui;margin:0 0 20px}#mode-choice .ui-icon{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7}#mode-choice button{display:inline-flex;align-items:center;gap:10px;font:600 16px system-ui;padding:18px;margin:5px;background:#e0ebe2;border:0;border-radius:12px;color:#234b3c}</style><link rel="stylesheet" href="hud-modern.css?v=8"><link rel="stylesheet" href="vehicle-menu.css?v=1"><link rel="stylesheet" href="player-profile.css?v=10"><link rel="stylesheet" href="mobile-ui.css?v=2"><link rel="stylesheet" href="drive-sponsor.css?v=3">
+<style>
+/* Premium Visual Enhancements */
+#mode-choice, #places-dialog, #leaderboard-dialog, #player-welcome, #graphics-welcome, #journey {
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+#mode-choice button {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+#mode-choice button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
+}
+#driving-hud {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+</style>
 
-  <!-- Welcome / Audio Unlock Splash Overlay -->
-  <div id="start-overlay" class="start-overlay">
-    <div class="start-card">
-      <div class="logo-badge">EARTHDRIVE 3D</div>
-      <h1>Real Roads. Your Drive.</h1>
-      <p>Drive iconic world roads, high-speed expressways, and mountain passes with realistic vehicle physics, engine acoustics, and live radar.</p>
-
-      <div class="controls-guide">
-        <div class="control-key-item"><kbd>W</kbd> <kbd>S</kbd> <span>Throttle / Brake</span></div>
-        <div class="control-key-item"><kbd>A</kbd> <kbd>D</kbd> <span>Steering</span></div>
-        <div class="control-key-item"><kbd>SPACE</kbd> <span>Handbrake / Drift</span></div>
-        <div class="control-key-item"><kbd>C</kbd> <span>Change Camera</span></div>
-        <div class="control-key-item"><kbd>H</kbd> <span>Car Horn</span></div>
-        <div class="control-key-item"><kbd>L</kbd> <span>Headlights</span></div>
-        <div class="control-key-item"><kbd>R</kbd> <span>Reset Vehicle</span></div>
-      </div>
-
-      <button id="start-btn" class="start-drive-btn">
-        <span>START EXPLORING</span>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- HUD Overlay -->
-  <div id="hud-overlay">
-    <!-- Top Navigation Bar -->
-    <div class="top-bar">
-      <div class="location-card">
-        <span class="location-badge">WORLD EXPLORER</span>
-        <h2 id="location-banner">Tokyo · Shibuya Crossing</h2>
-        <span id="location-desc">Dynamic neon avenues, expressways, and realistic traffic</span>
-      </div>
-
-      <div class="top-controls">
-        <button id="open-destinations-btn" class="hud-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-          Destinations
-        </button>
-        <button id="cam-btn" class="hud-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span id="cam-label">CHASE</span>
-        </button>
-        <button id="mute-btn" class="hud-btn">🔊 Audio On</button>
-      </div>
-    </div>
-
-    <!-- Quick Vehicle & Environment Toolbar -->
-    <div class="mid-left-panel">
-      <!-- Vehicle Mode -->
-      <div class="pill-group">
-        <span class="group-title">VEHICLE</span>
-        <div class="toggle-btn-row">
-          <button class="pill-btn vehicle-btn active" data-vehicle="car">Supercar</button>
-          <button class="pill-btn vehicle-btn" data-vehicle="bus">Bus</button>
-          <button class="pill-btn vehicle-btn" data-vehicle="train">Train</button>
-          <button class="pill-btn vehicle-btn" data-vehicle="plane">Flight</button>
-        </div>
-      </div>
-
-      <!-- Time of Day -->
-      <div class="pill-group">
-        <span class="group-title">TIME OF DAY</span>
-        <div class="toggle-btn-row">
-          <button class="pill-btn time-btn" data-time="day">Day</button>
-          <button class="pill-btn time-btn active" data-time="sunset">Sunset</button>
-          <button class="pill-btn time-btn" data-time="night">Night</button>
-          <button class="pill-btn time-btn" data-time="dawn">Dawn</button>
-        </div>
-      </div>
-
-      <!-- Weather -->
-      <div class="pill-group">
-        <span class="group-title">ATMOSPHERE</span>
-        <div class="toggle-btn-row">
-          <button class="pill-btn weather-btn active" data-weather="clear">Clear</button>
-          <button class="pill-btn weather-btn" data-weather="rain">Rain</button>
-          <button class="pill-btn weather-btn" data-weather="fog">Fog</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom Telemetry & Navigation -->
-    <div class="bottom-bar">
-      <!-- Tactical Mini-Map Radar -->
-      <div class="minimap-wrapper">
-        <canvas id="minimap-canvas" width="170" height="170"></canvas>
-      </div>
-
-      <!-- Instrument Cluster -->
-      <div class="instrument-cluster">
-        <!-- Circular Speedometer Gauge -->
-        <div class="gauge-circular">
-          <div id="speedo-needle" class="needle-pivot"></div>
-          <div class="speed-digital">
-            <span id="hud-speed">0</span>
-            <span class="speed-unit">KM / H</span>
-          </div>
-        </div>
-
-        <!-- Telemetry Details -->
-        <div class="cluster-telemetry">
-          <div class="gear-display">
-            <div id="hud-gear" class="gear-pill">1</div>
-            <div class="vehicle-label">
-              <span id="vehicle-name">Apex GT Supercar</span>
-              <span id="hud-trip">0.00 km</span>
-            </div>
-          </div>
-
-          <!-- RPM Bar -->
-          <div class="rpm-bar-container">
-            <div id="rpm-bar-fill"></div>
-          </div>
-
-          <!-- Indicator Badges -->
-          <div class="badge-row">
-            <span id="headlight-indicator" class="indicator-badge active">LIGHTS</span>
-            <span id="drift-badge" class="indicator-badge">DRIFT</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mobile Touch Controls -->
-  <div id="mobile-controls">
-    <div class="touch-cluster-left">
-      <button id="touch-left" class="touch-btn" aria-label="Steer Left">◀</button>
-      <button id="touch-right" class="touch-btn" aria-label="Steer Right">▶</button>
-    </div>
-
-    <div class="touch-cluster-right">
-      <button id="touch-horn" class="touch-btn" style="width: 54px; height: 54px;" aria-label="Horn">🎺</button>
-      <button id="touch-handbrake" class="touch-btn" style="width: 58px; height: 58px;" aria-label="Handbrake">P</button>
-      <button id="touch-brake" class="touch-btn pedal-btn pedal-brake" aria-label="Brake / Reverse">BRAKE</button>
-      <button id="touch-gas" class="touch-btn pedal-btn pedal-gas" aria-label="Accelerate">GAS</button>
-    </div>
-  </div>
-
-  <!-- Destinations & Map Modal -->
-  <div id="destinations-modal" class="modal-overlay hidden">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3>Explore Destinations</h3>
-        <button id="close-destinations-btn" class="close-btn">&times;</button>
-      </div>
-
-      <div class="modal-search">
-        <input id="search-coord-input" type="text" placeholder="Search any city or enter lat, lon (e.g. Paris, or 48.858, 2.294)" />
-        <button id="search-coord-btn">Teleport</button>
-      </div>
-
-      <div id="destinations-list" class="modal-body">
-        <!-- Dynamically populated cards -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Three.js Engine & Game Modules -->
-  <script src="./vendor/three.min.js"></script>
-  <script src="./js/audio.js"></script>
-  <script src="./js/vehicles.js"></script>
-  <script src="./js/physics.js"></script>
-  <script src="./js/world.js"></script>
-  <script src="./js/weather.js"></script>
-  <script src="./js/minimap.js"></script>
-  <script src="./js/app.js"></script>
-</body>
-</html>
+</head><body class="hud-modern"><svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><symbol id="icon-car" viewBox="0 0 24 24"><path d="m5 8 2-4h10l2 4M4 8h16l1 3v7H3v-7zM6 18v2m12-2v2M6 12h2m8 0h2M5 8v-1m14 1v-1"/></symbol><symbol id="icon-bus" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="18" rx="3"/><path d="M4 10h16M8 2v8m8-8v8M7 15h1m8 0h1M7 20v2m10-2v2"/></symbol><symbol id="icon-train" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="16" rx="4"/><path d="M5 10h14M12 3v7M8 14h1m6 0h1M8 18l-3 4m11-4 3 4M7 21h10"/></symbol><symbol id="icon-plane" viewBox="0 0 24 24"><path d="m22 9-9-3V3a1 1 0 0 0-2 0v3L2 9v3l9-2v7l-3 2v2l4-1 4 1v-2l-3-2v-7l9 2z"/></symbol><symbol id="icon-route" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 7v8a4 4 0 0 0 4 4h6M8 5h6a4 4 0 0 1 0 8h-4"/></symbol><symbol id="icon-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m16 8-3 5-5 3 3-5z"/></symbol><symbol id="icon-flag" viewBox="0 0 24 24"><path d="M5 22V3m0 1c5-4 9 4 14 0v11c-5 4-9-4-14 0"/></symbol><symbol id="icon-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol><symbol id="icon-controls" viewBox="0 0 24 24"><path d="M6 12h4m-2-2v4m8-3h.01M18 13h.01M7 5h10a4 4 0 0 1 4 4l1 7a3 3 0 0 1-5 2l-2-2H9l-2 2a3 3 0 0 1-5-2l1-7a4 4 0 0 1 4-4Z"/></symbol></svg>
+<div id="rail-crossing-status" role="status" hidden></div><div id="world"></div><div id="hud-status"><small>TIME / 10×</small></div><div id="hud-attribution"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a> · <a href="https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9" target="_blank" rel="noopener">Imagery © Esri</a></div><nav id="direct-controls" aria-label="Driving controls"></nav><section id="travel-banner"><strong id="moving-location">EarthDrive</strong><span id="destination-distance">Free exploration</span></section><div id="pack-progress" role="status">Preparing scenery pack…</div><section id="local-task" hidden><div><strong id="local-target"></strong><b id="local-distance"></b></div><p id="local-instruction"></p><small id="local-advice"></small><button id="local-cancel">Cancel</button></section><dialog id="places-dialog"><div class="modal-top"><button id="places-close" class="close" aria-label="Close">×</button></div><h2>Nearby</h2><p id="places-count"></p><input id="places-filter" placeholder="Search bank, shop or place name" aria-label="Search nearby places"><select id="places-category" aria-label="Place category"><option value="all">All places</option><option value="fire">Fire stations</option><option value="atm">ATMs</option><option value="bank">Banks</option><option value="landmark">Temples / attractions</option><option value="rail">Railway stations</option><option value="home">Homes / apartments</option><option value="office">Offices</option><option value="bus">Bus facilities</option><option value="food">Food</option><option value="medical">Medical</option><option value="shop">Shops</option><option value="cinema">Cinemas</option><option value="school">Schools</option><option value="fuel">Petrol pumps</option></select><p id="places-note" role="status"></p><div id="places-list"></div></dialog><div id="asset-status" role="status" hidden></div><div id="career-strip"><button id="run-start">▶ Street Run</button><span id="career-wallet">$0 · BEST 0</span><button id="run-paint" title="Change car paint for 500 earned credits">Garage · $500</button></div><details id="bus-hud" class="journey-hud panel" hidden><summary>▣ BUS SERVICE · <span id="bus-next">Choose route</span></summary><div class="quick-body"><p id="bus-load">0/40 passengers</p><p id="bus-fare">Earned ₹0</p><p id="bus-instruction">Choose a route for passenger service</p><div class="bus-actions"><button id="bus-doors">B · Open doors</button><button id="bus-horn">H · Horn</button><button id="bus-car">Switch to car</button></div><p class="fine">W/↑ accelerate · S/↓ brake/reverse · Space parking brake · B doors · H horn · C driver view. Stop facing along the route and open doors for 5 seconds.</p></div></details><section id="run-hud" hidden><span id="run-progress">GATE 1/6</span><strong id="run-timer">55s</strong><b id="run-score">0</b><button id="run-cancel" title="End run">×</button></section><div id="skill-flash" hidden></div><dialog id="run-results"><h2 id="run-result-title">RUN COMPLETE</h2><strong id="run-result-score">0</strong><p id="run-result-note"></p><button id="run-again" class="primary">Run it again ↗</button><button id="run-close">Keep exploring</button></dialog><button id="game-menu-open" aria-label="Open game menu">☰ Menu</button><nav id="quick-tools" aria-label="Game controls"><details class="quick-panel" name="hud-tools"><summary>▶ Play</summary><div id="play-tools"></div></details><details class="quick-panel" name="hud-tools"><summary>◉ World view</summary><div id="world-tools"><label class="vehicle-volume-label" for="vehicle-volume">Sound volume <output id="vehicle-volume-value">60%</output></label><input id="vehicle-volume" type="range" min="0" max="100" value="60" aria-label="Vehicle sound volume"><output id="vehicle-audio-state" aria-live="off">Sound ready</output><progress id="vehicle-audio-level" max="100" value="0" aria-label="Sound output level"></progress><a class="vehicle-sound-credit" href="assets/audio/CREDITS.md" target="_blank" rel="noopener">Vehicle sound credits</a></div></details><details class="quick-panel" name="hud-tools"><summary>▣ Camera & controls</summary><div id="view-tools"><button id="auto-gears" aria-pressed="true">Car gears: Automatic</button><button id="camera-reset">Reset camera view</button><small>Drag the world to look around · scroll to zoom · C changes camera</small></div></details><details class="quick-panel" name="hud-tools"><summary>⌖ Location</summary><div id="location-tools"></div></details></nav><span id="view-label">CHASE · C to enter</span><div id="cabin-overlay" hidden><div class="windshield-pillar left"></div><div class="windshield-pillar right"></div><div class="cabin-roof"></div><div class="dashboard"><div class="dash-gauge"><span id="cabin-speed">0</span><small>KM/H</small></div><div id="steering-wheel">◉</div><div class="dash-screen"><strong id="cabin-mode">DRIVE</strong><span id="cabin-readout">READY</span></div><div class="dash-gauge secondary"><span id="cabin-extra">N</span><small id="cabin-extra-label">GEAR</small></div></div></div><dialog id="game-menu"><div class="modal-top"><button id="game-menu-close" class="close" aria-label="Close menu">×</button></div><h2>PAUSE MENU</h2><p class="menu-kicker">EARTHDRIVE / WORLD EXPLORER</p><div id="menu-actions"></div><div id="menu-location"></div><details id="hud-credits"><summary>Map &amp; asset credits</summary><div id="hud-credit-links"></div></details></dialog><div class="vignette"></div>
+<header><a class="brand" href="#"><span class="brandmark">↗</span> earthdrive<span class="beta">EXPLORER</span></a><div class="header-right"><span class="live"><i></i> REAL WORLD ROADS</span><button id="map-view-toggle" aria-pressed="false">Map / 3D world ✓</button><button id="places-open">⌖ Nearby places</button><button id="bus-mode">▣ HRTC-style Bus</button><button id="flight-open">✈ Flight</button><button id="graphics-quality">Graphics: Balanced</button><button id="sound" title="Toggle vehicle audio" aria-pressed="true">Sound on</button><button id="help">? <span>Controls</span></button></div></header>
+<aside class="location panel"><span class="eyebrow">YOUR LITTLE CORNER OF THE WORLD</span><div class="place-row"><div><h1 id="place">Palampur</h1><p id="region">Himachal Pradesh, India</p></div><button id="explore" class="round" title="Change destination">↗</button></div><div class="location-footer"><span class="dot"></span><span id="road">Finding your road…</span></div><details id="road-info"><summary>Road info</summary><div class="road-classification"><div><span id="road-type" class="road-type">Local road</span><b id="road-ref"></b></div><span id="road-detail"></span><button id="highway-jump" hidden>Drive national highway ↗</button></div><span id="coords"></span><span id="roadcount"></span><p class="road-info-note">Highway class, lane count and surface come from the map; missing widths are estimated.</p></details></aside>
+<details class="journey-hud panel" id="journey-hud" name="hud-tools" hidden><summary><span id="route-summary">Route info</span> ▾</summary><div class="quick-body"><div class="journey-target"><strong id="journey-target">Choose a destination</strong><b id="remaining">—</b></div><p id="instruction">Plan a drive to see directions and milestones.</p><div class="journey-progress"><span id="journey-progress"></span></div><small id="nearby-label"></small></div></details>
+<details id="flight-hud" name="hud-tools" class="journey-hud panel" hidden><summary><span id="flight-summary">Flight info</span> ▾</summary><div class="quick-body"><div class="journey-target"><strong id="flight-title"></strong><b id="flight-distance"></b></div><p id="flight-altitude"></p><p id="flight-guidance"></p><small id="flight-throttle"></small><div class="flight-actions"><button id="flight-auto">Guidance off</button><button id="flight-fast">1× travel</button><button id="flight-exit">Return to car</button></div><div id="flight-extra"></div></div></details><div class="top-center" id="status" role="status">Preparing your first drive…</div>
+<div class="right-tools"><button id="landscape" title="View the real terrain and mountain skyline">△<span>Landscape</span></button><button id="camera" title="Change camera (C)">◉<span>Camera</span></button><button id="time" title="Change light">☀<span>Daylight</span></button><button id="reset" title="Reset to road (R)">↺<span>Reset</span></button></div>
+<section class="map-card panel"><div class="map-heading"><button id="expand-map" title="Expand map (M)" aria-pressed="false">RADAR ⤢</button><button id="north" title="Toggle map orientation">CAR ↑</button></div><canvas id="map" width="520" height="520" aria-label="Driving radar showing nearby streets and GPS route"></canvas><div id="satellite-status" role="status" hidden>3D landscape</div><a id="imagery-credit" href="https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9" target="_blank" rel="noopener">Imagery: Esri and imagery contributors</a><div class="map-footer"><span id="mapscale">500 m</span><span class="radar-label">GPS · M</span></div></section>
+<div class="bottom-center"><div class="road-pill"><span>↗</span><span id="drivehint">The world is yours. Take a turn.</span></div><div id="flight-controls" hidden><strong>ON THE RUNWAY: HOLD ↑, THEN PRESS W TO FLY</strong><div><button data-key="ArrowUp">↑ Faster</button><button data-key="KeyW">W Climb</button><button data-key="ArrowDown">↓ Descend</button><span>A/D bank · Space brake · R retry</span></div></div><div class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>drive</span><kbd>SPACE</kbd><span>brake</span><kbd>C</kbd><span>camera</span><kbd>R</kbd><span>reset</span></div></div>
+<section class="telemetry panel"><div class="drive-state"><i></i><span id="surface">FREE DRIVE</span><button id="assist" aria-pressed="false">Assist off</button></div><div id="speed-dial"><svg viewBox="0 0 240 210" aria-hidden="true"><path d="M45 183 A98 98 0 1 1 195 183" fill="none" stroke="#64787c" stroke-width="4"/><g id="dial-ticks"></g><path id="speed-needle" d="M120 120 L120 30" stroke="#ff695b" stroke-width="3"/><circle cx="120" cy="120" r="6" fill="#fff"/></svg></div><div class="speed-row"><span id="gear">N</span><strong id="speed">0</strong><span class="unit">KM/H</span></div><div id="gear-controls"><button id="gear-down" aria-label="Shift down">Q −</button><span id="gear-limit">1 · 50 km/h</span><button id="gear-up" aria-label="Shift up">E +</button></div><div class="rpm-track"><div id="rpm"></div></div><div class="trip"><span>DISTANCE <b id="distance">0.00 km</b></span><span id="clock">14:00</span></div></section>
+<a id="terrain-credit" href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Terrain: Mapzen / AWS · SRTM & GMTED2010 courtesy USGS</a><a id="imagery-world-credit" href="https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9" target="_blank" rel="noopener">Imagery: Esri and imagery contributors</a><footer><a href="assets/CREDITS.md" target="_blank" rel="noopener">Scenery · Poly Haven CC0</a><span>Airports: OurAirports · Real road layout. A new way to wander.</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a></footer>
+<div id="loading" class="loading"><span class="loader"></span><h2>Somewhere worth driving.</h2><p id="loadtext">Loading real streets around Palampur…</p><button id="retry" hidden>Try again</button></div>
+<dialog id="journey"><div class="modal-top"><button class="close" aria-label="Close">×</button></div><div class="setup-eyebrow">EARTHDRIVE <span>/</span> NEW JOURNEY</div><h2>Start your journey</h2><p class="setup-intro">Your world. Your starting point.</p><div class="start-methods"><button id="use-location" type="button" aria-label="Use my location"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-pin"/></svg><span><strong>Use my location</strong><small>Start near you</small></span></button><button id="select-map-from" type="button" aria-label="Select on map"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-compass"/></svg><span><strong>Select on map</strong><small>Choose any point</small></span></button></div><p class="location-note">Or search for a place below. A destination is optional.</p>
+<button id="resume-location" hidden type="button"></button><div class="route-field"><label for="from-place">STARTING POINT</label><div><input id="from-place" placeholder="City, place or coordinates" autocomplete="off"><button id="find-from" type="button">Find</button></div><small id="from-selection">Choose your location or search for a city</small></div>
+<div class="route-field"><label for="to-place">DESTINATION <span class="field-optional">OPTIONAL</span></label><div><input id="to-place" placeholder="Where would you like to go?" autocomplete="off"><button id="find-to" type="button">Find</button></div><button id="select-map-to" class="map-destination" type="button">Pick destination on map</button><small id="to-selection">Search, then select a place below.</small></div><div id="journey-results" aria-live="polite"></div>
+<button id="sample-journey" class="sample-journey" aria-label="Quick route"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-route"/></svg><span><strong>Quick route</strong><small>Maranda → Bhawarna · ready to explore</small></span><b aria-hidden="true">↗</b></button>
+<p id="route-status" role="status"></p><div class="journey-actions"><button id="start-journey" class="primary" disabled>Start drive</button><button id="free-roam">Free roam</button></div>
+</dialog>
+<dialog id="drive-activities"><h2>Choose drive</h2><div class="vehicle-grid activity-grid"><button id="activity-roam" class="vehicle-tile"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-compass"/></svg><span>Free roam</span></button><button id="activity-route" class="vehicle-tile"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-route"/></svg><span>Road trip</span></button><button id="activity-local" class="vehicle-tile"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-pin"/></svg><span>Local drive</span></button><button id="activity-run" class="vehicle-tile"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-flag"/></svg><span>Street run</span></button></div></dialog><dialog id="mode-choice" aria-labelledby="vehicle-title"><h2 id="vehicle-title">Choose vehicle</h2><div class="vehicle-grid"><button id="choose-car" class="vehicle-tile"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-car"/></svg><span>Car</span></button><button id="choose-bus" class="vehicle-tile"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bus"/></svg><span>Bus</span></button><button id="choose-train" class="vehicle-tile"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-train"/></svg><span>Train</span></button><button id="choose-flight" class="vehicle-tile"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plane"/></svg><span>Plane</span></button></div><a class="vehicle-sponsor" href="https://weekendtricks.com/" target="_blank" rel="noopener sponsored"><svg class="sponsor-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg><span><small>ADVERTISEMENT</small><strong>Increase followers &amp; Likes</strong><span class="sponsor-domain">weekendtricks.com ↗</span></span></a></dialog>
+<dialog id="train-dialog"><div class="modal-top"><button class="close" aria-label="Close">×</button></div><h2><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-train"/></svg>Train</h2><div class="directory-columns"><label class="flight-select">FROM <select id="station-state-from" aria-label="Departure state"></select><input id="station-filter-from" placeholder="Search station name or code" aria-label="Search departure station"><small id="station-count-from"></small><select id="train-from" size="7" aria-label="Start station"></select></label><label class="flight-select">TO <select id="station-state-to" aria-label="Destination state"></select><input id="station-filter-to" placeholder="Search station name or code" aria-label="Search arrival station"><small id="station-count-to"></small><select id="train-to" size="7" aria-label="Reachable destination station"></select></label></div><details class="setup-options"><summary>Options</summary><label class="flight-select">SPEED <select id="train-cruise"><option value="100">100 km/h</option><option value="300">300 km/h</option><option value="500">500 km/h</option><option value="1000">1,000 km/h</option><option value="2000">2,000 km/h</option></select></label><p><label><input id="train-stop-stations" type="checkbox" checked> Station stops</label></p><p><label><input id="train-free" type="checkbox"> Free roam</label></p></details><p id="train-message" role="status"></p><button id="train-start" class="primary" disabled>Start train</button></dialog>
+<details id="train-hud" class="journey-hud" hidden><summary id="train-summary">Rail journey</summary><p id="train-next"></p><small id="train-remaining"></small><p><button id="train-depart" hidden>Depart now</button></p></details><div id="train-controls" hidden><button id="train-exit" disabled>Step out · stop first</button><button id="train-pause" title="Stop or resume anywhere · Space">Stop train</button><small>AUTOMATIC RAIL TRAVEL · ARCADE SPEED · C CAB VIEW</small><div><button data-train-speed="100" aria-pressed="true">100 km/h</button><button data-train-speed="300" aria-pressed="false">300 km/h</button><button data-train-speed="500" aria-pressed="false">500 km/h</button><button data-train-speed="1000" aria-pressed="false">1,000 km/h</button><button data-train-speed="2000" aria-pressed="false">2,000 km/h</button></div></div><button id="train-open" hidden>Train</button><button id="mode-open" hidden>Change vehicle</button><dialog id="flight-dialog"><div class="modal-top"><button class="close" aria-label="Close">×</button></div><h2><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plane"/></svg>Flight</h2><div id="flight-load" hidden role="status" aria-live="polite" aria-busy="false"><span class="flight-spinner" aria-hidden="true"></span><strong id="flight-load-percent">0%</strong><span id="flight-load-stage">Preparing flight…</span><progress id="flight-load-progress" value="0" max="100" aria-label="Flight setup progress"></progress><small>Airport setup progress · some map services may take longer</small></div><div class="directory-columns"><label class="flight-select">FROM <select id="flight-country-from" aria-label="Departure country"></select><input id="flight-search-from" placeholder="Search city, airport or code" aria-label="Search departure airport"><small id="flight-count-from"></small><select id="flight-from" size="7" aria-label="Departure airport"></select></label><label class="flight-select">TO <select id="flight-country-to" aria-label="Arrival country"></select><input id="flight-search-to" placeholder="Search city, airport or code" aria-label="Search arrival airport"><small id="flight-count-to"></small><select id="flight-to" size="7" aria-label="Arrival airport"></select></label></div><p id="flight-message" role="status"></p><button id="flight-start" class="primary" disabled>Start flight</button></dialog>
+<dialog id="destinations"><div class="modal-top"><button class="close" aria-label="Close">×</button></div><h2><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-pin"/></svg>Location</h2><form id="searchform"><label class="searchbox"><span>⌕</span><input id="query" placeholder="Search anywhere on Earth…" autocomplete="off" aria-label="Search destination"><button>Search ↗</button></label></form><div id="results" aria-live="polite"></div><div class="section-label">A FEW GOOD PLACES TO GET LOST</div><div id="presets"></div><details><summary>Have coordinates or a Google Maps link?</summary><form id="coordform"><input id="coordinput" placeholder="32.1109, 76.5363 or a full Maps URL" aria-label="Coordinates or map URL"><button>Drive here ↗</button></form><small>Use a full URL containing @latitude,longitude. Short links cannot be resolved here.</small></details></dialog>
+<dialog id="controls"><div class="modal-top"><button class="close" aria-label="Close">×</button></div><h2><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-controls"/></svg>Controls</h2><div class="control-list"><p><kbd>W / ↑</kbd> Accelerate</p><p><kbd>S / ↓</kbd> Brake, then reverse</p><p><kbd>A D / ← →</kbd> Steer</p><p><kbd>SPACE</kbd> Handbrake</p><p><kbd>C</kbd> Chase / cabin or cockpit view</p><p><kbd>M</kbd> Expand / close the radar map</p><p><kbd>R</kbd> Return to the nearest road</p><p><kbd>ESC</kbd> Pause / resume</p></div><button class="primary close-button">Let's drive ↗</button></dialog>
+<div class="touch"><button data-key="ArrowLeft">←</button><button data-key="ArrowRight">→</button><button data-key="ArrowDown">Brake</button><button data-key="ArrowUp">Go ↑</button></div>
+<a id="footprint-credit" href="https://github.com/microsoft/GlobalMLBuildingFootprints" target="_blank" rel="noopener" hidden style="position:fixed;bottom:48px;right:12px;font-size:10px;background:#12252ecc;color:#e6ecda;padding:4px;border-radius:4px;z-index:12"></a><a id="landcover-credit" href="https://esa-worldcover.org/en/data-access" target="_blank" rel="noopener" hidden style="position:fixed;bottom:33px;right:12px;font-size:10px;background:#12252ecc;color:#e6ecda;padding:4px;border-radius:4px;z-index:12"></a><dialog id="location-map-dialog" aria-labelledby="location-map-title"><div class="modal-top"><button id="location-map-cancel" class="map-close" aria-label="Back to location setup">×</button></div><h2 id="location-map-title">Select starting point</h2><p>Drag to move · + / − to zoom · click any place to drop a pin.</p><form id="location-map-search"><input id="location-map-query" aria-label="Find city on map" placeholder="Find a nearby city to move the map"><button type="submit">Find</button></form><div id="location-map-results" aria-live="polite"></div><div id="location-map" tabindex="0" role="application" aria-label="Location map. Arrow keys move, plus and minus zoom, Enter selects the centre."><div id="location-map-tiles"></div><span id="location-map-you" hidden title="Your current location" aria-label="Your current location"></span><span id="location-map-pin" hidden aria-hidden="true">📍</span><div class="location-map-zoom"><button id="location-map-nearby" type="button" aria-label="Show my nearby location" title="Nearby me">⌖ Nearby me</button><button id="location-map-plus" type="button" aria-label="Zoom in">+</button><button id="location-map-minus" type="button" aria-label="Zoom out">−</button></div><a class="location-map-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a></div><p id="location-map-status" role="status">Select a point on the map.</p><button id="location-map-confirm" class="primary" disabled>Use this starting point</button></dialog><aside id="car-damage-hud" hidden><label id="car-condition" for="car-health">HEALTHY · 100%</label><progress id="car-health" max="100" value="100" aria-label="Vehicle condition"></progress><button id="car-repair" title="Stop the vehicle, then repair">Repair vehicle · stop first</button></aside><dialog id="crash-game-over" aria-labelledby="crash-over-title"><h2 id="crash-over-title">Vehicle destroyed</h2><p>GAME OVER</p><p>The engine is burning and the car cannot continue.</p><button id="crash-restart" class="primary">Repair & restart drive</button></dialog><div id="walk-controls" hidden><p id="walk-status"></p><button id="enter-walk-car">Enter car · F</button><button id="board-parked-train">Board train</button></div><dialog id="bus-fleet-dialog"><div class="modal-top"><button class="close" aria-label="Close">×</button></div><h2>Choose your state bus</h2><label class="flight-select">STATE / UNION TERRITORY<select id="bus-state" aria-label="Bus state"></select></label><div id="bus-fleet-swatch" style="height:12px;border-radius:3px;margin:12px 0"></div><h3 id="bus-fleet-name"></h3><p>Regional game liveries · choose any start location next.</p><button id="bus-fleet-start" class="primary">Choose location &amp; drive</button></dialog><dialog id="player-welcome" aria-labelledby="welcome-title"><h2 id="welcome-title">Your username</h2><form id="player-form"><input id="player-name" aria-label="Username" maxlength="24" minlength="3" pattern="[A-Za-z][A-Za-z0-9_]{2,23}" autocomplete="username" placeholder="Username" required><p id="username-status" role="status"></p><div id="username-suggestions"></div><button id="player-register" class="primary" disabled>Continue</button><button id="play-offline" type="button" hidden>Continue offline</button></form></dialog><dialog id="graphics-welcome" aria-labelledby="graphics-title"><h2 id="graphics-title">Graphics</h2><div id="graphics-cards" role="group" aria-label="Graphics"><button type="button" class="graphics-card" data-quality="low" aria-pressed="false"><strong>Low</strong><span>Smoothest</span></button><button type="button" class="graphics-card" data-quality="medium" aria-pressed="false"><strong>Medium</strong><span>Balanced</span></button><button type="button" class="graphics-card" data-quality="high" aria-pressed="false"><strong>High</strong><span>Most detail</span></button></div><button id="graphics-play" class="primary">Play</button><details><summary>Privacy</summary><label class="usage-choice"><input id="usage-consent" type="checkbox"> Share detailed screen statistics</label><small>Visits and play time are counted to run game statistics. Optional: detailed screens and active time. No precise location. Your username and distance appear on the leaderboard.</small></details></dialog><dialog id="leaderboard-dialog" aria-labelledby="leaderboard-title"><button id="leaderboard-close" class="close" aria-label="Close leaderboard">×</button><div class="leaderboard-heading"><span class="leaderboard-kicker">EARTHDRIVE / WORLD RANKINGS</span><h2 id="leaderboard-title">Distance leaders</h2><p>Every journey counts.</p></div><div id="leaderboard-tabs" role="group" aria-label="Vehicle leaderboard"><button type="button" data-leaderboard="total" aria-pressed="true">All</button><button type="button" data-leaderboard="car" aria-pressed="false">Car</button><button type="button" data-leaderboard="bus" aria-pressed="false">Bus</button><button type="button" data-leaderboard="train" aria-pressed="false">Train</button><button type="button" data-leaderboard="plane" aria-pressed="false">Plane</button></div><p id="leaderboard-status" role="status"></p><div class="leaderboard-scroll" tabindex="0" aria-label="Rankings"><table><thead><tr><th>Rank</th><th>Player</th><th>Distance</th></tr></thead><tbody id="leaderboard-rows"></tbody></table></div><nav id="leaderboard-pages" aria-label="Leaderboard pages"><button id="leaderboard-prev" type="button">← Previous</button><span id="leaderboard-page" aria-live="polite"></span><button id="leaderboard-next" type="button">Next →</button></nav></dialog><aside id="player-tools"><span id="player-badge"></span><button id="leaderboard-open">Leaderboard</button><small id="profile-sync"></small></aside><script src="vendor/three.min.js"></script><script src="vendor/GLTFLoader.js"></script><script src="vendor/RGBELoader.js"></script><script src="vendor/meshopt-decoder.js"></script><script src="vendor/SkeletonUtils.js"></script><script src="vendor/Pass.js"></script><script src="vendor/CopyShader.js"></script><script src="vendor/ShaderPass.js"></script><script src="vendor/MaskPass.js"></script><script src="vendor/EffectComposer.js"></script><script src="vendor/RenderPass.js"></script><script src="vendor/SimplexNoise.js"></script><script src="vendor/SSAOShader.js"></script><script src="vendor/SSAOPass.js"></script><script src="vendor/OutputShader.js"></script><script src="vendor/OutputPass.js"></script><script src="vendor/FXAAShader.js"></script><script src="game-quality.js?v=3"></script><script src="core.js?v=small10"></script><script src="satellite.js?v=profile1"></script><script src="visuals.js?v=profile1"></script><script src="roadbed.js?v=clock39"></script><script src="terrain-roads.js?v=stream5"></script><script src="water.js?v=clock39"></script><script src="rail-models.js?v=clock39"></script><script src="railway.js?v=profile1"></script><script src="street-life.js?v=clock39"></script><script src="terrain.js?v=flight9"></script><script src="airport-scenery.js?v=small10"></script><script src="flight-loading.js?v=1"></script><script src="flight.js?v=small10"></script><script src="view.js?v=drive41"></script><script src="traffic-models.js?v=clock39"></script><script src="ambient.js?v=profile1"></script><script src="streetrun.js?v=clock39"></script><script src="bus-fleet.js?v=2"></script><script src="bus.js?v=drive41"></script><script src="place-designs.js?v=clock39"></script><script src="landmarks.js?v=profile1"></script><script src="town.js?v=profile1"></script><script src="scenery.js?v=profile1"></script><script src="car-model.js?v=clock39"></script><script src="city-drive.js?v=clock39"></script><script src="people.js?v=clock39"></script><script src="rendering.js?v=profile1"></script><script src="power.js?v=clock39"></script><script src="india-world.js?v=clock39"></script><script src="train-network.js?v=clock39"></script><script src="train-travel.js?v=1"></script><script src="train-mode.js?v=stream5"></script><script src="maranda.js?v=clock39"></script><script src="vendor/geotiff.js"></script><script src="landcover.js?v=clock39"></script><script src="footprints.js?v=profile1"></script><script src="crash-physics.js?v=2"></script><script src="vehicle-audio.js?v=stream5"></script><script src="game-time.js?v=1"></script><script src="drive-features.js?v=2"></script><script src="game.js?v=touch11"></script><script src="driving-hud.js?v=center5"></script><script src="start-location.js?v=profile2"></script><script src="location-map.js?v=map1"></script><script src="hud-modern.js?v=5"></script><script src="player-profile.js?v=pages9"></script><aside id="flight-takeoff-hint" role="status" hidden>↑ Accelerate, then <strong>hold W to climb</strong></aside><script src="mobile-ui.js?v=2"></script><script src="site-traffic.js?v=1"></script><script src="drive-sponsor.js?v=3"></script></body></html>

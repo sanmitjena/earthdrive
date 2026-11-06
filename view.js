@@ -1,0 +1,12 @@
+/* Uncluttered play view; all advanced controls remain available in the menu. */
+function updateGameView(isFlight){const inside=cameraMode===1;$('cabin-overlay').hidden=!inside||!!bus?.active;if(bus)bus.updateCabin();document.body.classList.toggle('inside-view',inside);document.body.classList.toggle('flying',isFlight);document.body.classList.toggle('driving-bus',!!bus?.active);$('view-label').textContent=(inside?(isFlight?'COCKPIT':bus?.active?'BUS DRIVER':'CABIN'):'CHASE')+' · C to switch';$('cabin-speed').textContent=Math.round(Math.abs(isFlight?flight.state.speed:car.speed)*3.6);$('cabin-mode').textContent=isFlight?'FLIGHT':bus?.active?(bus.fleet?.short||'STATE')+' · BUS':'DRIVE';$('cabin-readout').textContent=isFlight?(flight.crashed?'CRASHED':flight.state.grounded?'RUNWAY':'AIRBORNE'):($('road').textContent||'FREE DRIVE');$('cabin-extra').textContent=isFlight?Math.round(flight.state.altitude+terrain.base):car.speed<-.4?'R':Math.abs(car.speed)<.4?'N':car.gear||1;$('cabin-extra-label').textContent=isFlight?'ALT · M':'GEAR';$('steering-wheel').style.transform=`translateX(-50%) rotate(${isFlight?flight.state.roll*50:car.steer*150}deg)`;document.querySelector('.flight-actions').hidden=!isFlight;$('flight-summary').textContent=$('flight-title').textContent+' · '+$('flight-distance').textContent;$('route-summary').textContent=$('journey-target').textContent+' · '+$('remaining').textContent;const takeoff=isFlight&&!flight.crashed&&flight.state.grounded;$('flight-controls').classList.toggle('takeoff',takeoff);if(isFlight)$('flight-controls').querySelector?.('strong')?.replaceChildren(document.createTextNode(takeoff?'HOLD ↑ TO ACCELERATE · PRESS W TO TAKE OFF':'W CLIMB · ↓ DESCEND · ↑ SPEED'));}
+window.addEventListener('DOMContentLoaded',()=>{
+ const move=(id,parent)=>{const item=$(id);if(item){$(parent).append(item);if(id==='train-open'||id==='mode-open')item.hidden=false;}};
+ for(const id of ['map-view-toggle','graphics-quality','time'])move(id,'world-tools');
+ for(const id of ['places-open','flight-open','bus-mode','train-open','mode-open','explore'])move(id,'play-tools');
+ for(const id of ['camera','reset','assist','help'])move(id,'view-tools');
+ const location=document.querySelector('.location');if(location)document.body.append(location);
+ for(const id of ['camera','map-view-toggle','explore','places-open','mode-open','sound'])move(id,'direct-controls');
+ const flightActions=document.querySelector('.flight-actions');if(flightActions)$('flight-extra').append(flightActions);
+ $('game-menu-open').hidden=true;
+});

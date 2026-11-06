@@ -1,0 +1,1 @@
+// Cleaned: No sponsor popup
