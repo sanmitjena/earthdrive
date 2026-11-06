@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>EarthDrive — Real Roads & 3D World Explorer</title>
+  <meta name="description" content="Explore and drive real-world roads anywhere on Earth in an immersive 3D open-world driving simulator." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- 3D WebGL Canvas Viewport -->
+  <div id="canvas-container"></div>
+
+  <!-- Welcome / Audio Unlock Splash Overlay -->
+  <div id="start-overlay" class="start-overlay">
+    <div class="start-card">
+      <div class="logo-badge">EARTHDRIVE 3D</div>
+      <h1>Real Roads. Your Drive.</h1>
+      <p>Drive iconic world roads, high-speed expressways, and mountain passes with realistic vehicle physics, engine acoustics, and live radar.</p>
+
+      <div class="controls-guide">
+        <div class="control-key-item"><kbd>W</kbd> <kbd>S</kbd> <span>Throttle / Brake</span></div>
+        <div class="control-key-item"><kbd>A</kbd> <kbd>D</kbd> <span>Steering</span></div>
+        <div class="control-key-item"><kbd>SPACE</kbd> <span>Handbrake / Drift</span></div>
+        <div class="control-key-item"><kbd>C</kbd> <span>Change Camera</span></div>
+        <div class="control-key-item"><kbd>H</kbd> <span>Car Horn</span></div>
+        <div class="control-key-item"><kbd>L</kbd> <span>Headlights</span></div>
+        <div class="control-key-item"><kbd>R</kbd> <span>Reset Vehicle</span></div>
+      </div>
+
+      <button id="start-btn" class="start-drive-btn">
+        <span>START EXPLORING</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- HUD Overlay -->
+  <div id="hud-overlay">
+    <!-- Top Navigation Bar -->
+    <div class="top-bar">
+      <div class="location-card">
+        <span class="location-badge">WORLD EXPLORER</span>
+        <h2 id="location-banner">Tokyo · Shibuya Crossing</h2>
+        <span id="location-desc">Dynamic neon avenues, expressways, and realistic traffic</span>
+      </div>
+
+      <div class="top-controls">
+        <button id="open-destinations-btn" class="hud-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+          Destinations
+        </button>
+        <button id="cam-btn" class="hud-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span id="cam-label">CHASE</span>
+        </button>
+        <button id="mute-btn" class="hud-btn">🔊 Audio On</button>
+      </div>
+    </div>
+
+    <!-- Quick Vehicle & Environment Toolbar -->
+    <div class="mid-left-panel">
+      <!-- Vehicle Mode -->
+      <div class="pill-group">
+        <span class="group-title">VEHICLE</span>
+        <div class="toggle-btn-row">
+          <button class="pill-btn vehicle-btn active" data-vehicle="car">Supercar</button>
+          <button class="pill-btn vehicle-btn" data-vehicle="bus">Bus</button>
+          <button class="pill-btn vehicle-btn" data-vehicle="train">Train</button>
+          <button class="pill-btn vehicle-btn" data-vehicle="plane">Flight</button>
+        </div>
+      </div>
+
+      <!-- Time of Day -->
+      <div class="pill-group">
+        <span class="group-title">TIME OF DAY</span>
+        <div class="toggle-btn-row">
+          <button class="pill-btn time-btn" data-time="day">Day</button>
+          <button class="pill-btn time-btn active" data-time="sunset">Sunset</button>
+          <button class="pill-btn time-btn" data-time="night">Night</button>
+          <button class="pill-btn time-btn" data-time="dawn">Dawn</button>
+        </div>
+      </div>
+
+      <!-- Weather -->
+      <div class="pill-group">
+        <span class="group-title">ATMOSPHERE</span>
+        <div class="toggle-btn-row">
+          <button class="pill-btn weather-btn active" data-weather="clear">Clear</button>
+          <button class="pill-btn weather-btn" data-weather="rain">Rain</button>
+          <button class="pill-btn weather-btn" data-weather="fog">Fog</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Telemetry & Navigation -->
+    <div class="bottom-bar">
+      <!-- Tactical Mini-Map Radar -->
+      <div class="minimap-wrapper">
+        <canvas id="minimap-canvas" width="170" height="170"></canvas>
+      </div>
+
+      <!-- Instrument Cluster -->
+      <div class="instrument-cluster">
+        <!-- Circular Speedometer Gauge -->
+        <div class="gauge-circular">
+          <div id="speedo-needle" class="needle-pivot"></div>
+          <div class="speed-digital">
+            <span id="hud-speed">0</span>
+            <span class="speed-unit">KM / H</span>
+          </div>
+        </div>
+
+        <!-- Telemetry Details -->
+        <div class="cluster-telemetry">
+          <div class="gear-display">
+            <div id="hud-gear" class="gear-pill">1</div>
+            <div class="vehicle-label">
+              <span id="vehicle-name">Apex GT Supercar</span>
+              <span id="hud-trip">0.00 km</span>
+            </div>
+          </div>
+
+          <!-- RPM Bar -->
+          <div class="rpm-bar-container">
+            <div id="rpm-bar-fill"></div>
+          </div>
+
+          <!-- Indicator Badges -->
+          <div class="badge-row">
+            <span id="headlight-indicator" class="indicator-badge active">LIGHTS</span>
+            <span id="drift-badge" class="indicator-badge">DRIFT</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Touch Controls -->
+  <div id="mobile-controls">
+    <div class="touch-cluster-left">
+      <button id="touch-left" class="touch-btn" aria-label="Steer Left">◀</button>
+      <button id="touch-right" class="touch-btn" aria-label="Steer Right">▶</button>
+    </div>
+
+    <div class="touch-cluster-right">
+      <button id="touch-horn" class="touch-btn" style="width: 54px; height: 54px;" aria-label="Horn">🎺</button>
+      <button id="touch-handbrake" class="touch-btn" style="width: 58px; height: 58px;" aria-label="Handbrake">P</button>
+      <button id="touch-brake" class="touch-btn pedal-btn pedal-brake" aria-label="Brake / Reverse">BRAKE</button>
+      <button id="touch-gas" class="touch-btn pedal-btn pedal-gas" aria-label="Accelerate">GAS</button>
+    </div>
+  </div>
+
+  <!-- Destinations & Map Modal -->
+  <div id="destinations-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Explore Destinations</h3>
+        <button id="close-destinations-btn" class="close-btn">&times;</button>
+      </div>
+
+      <div class="modal-search">
+        <input id="search-coord-input" type="text" placeholder="Search any city or enter lat, lon (e.g. Paris, or 48.858, 2.294)" />
+        <button id="search-coord-btn">Teleport</button>
+      </div>
+
+      <div id="destinations-list" class="modal-body">
+        <!-- Dynamically populated cards -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js Engine & Game Modules -->
+  <script src="./vendor/three.min.js"></script>
+  <script src="./js/audio.js"></script>
+  <script src="./js/vehicles.js"></script>
+  <script src="./js/physics.js"></script>
+  <script src="./js/world.js"></script>
+  <script src="./js/weather.js"></script>
+  <script src="./js/minimap.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
